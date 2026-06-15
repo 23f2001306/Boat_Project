@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="boat_primary">#0D6EFD</color>
+    <color name="boat_background">#F8F9FA</color>
+    <color name="boat_text">#212529</color>
+</resources>

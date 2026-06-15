@@ -1,0 +1,16 @@
+[Unit]
+Description=Water Hyacinth Collection Boat Control System
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Boat_Project
+Environment="PATH=/home/pi/Boat_Project/venv/bin"
+ExecStart=/home/pi/Boat_Project/venv/bin/gunicorn --config /home/pi/Boat_Project/deployment/gunicorn.conf.py wsgi:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

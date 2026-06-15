@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Water Hyacinth Boat</string>
+    <string name="splash_title">Water Hyacinth Collection Boat</string>
+    <string name="no_internet_title">No Internet Connection</string>
+    <string name="no_internet_message">Connect this phone to the same network as the Raspberry Pi, then try again.</string>
+    <string name="server_offline_title">Server Offline</string>
+    <string name="server_offline_message">The Raspberry Pi boat server is not responding. Check the Flask app and IP address.</string>
+    <string name="retry">Retry</string>
+</resources>

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Water Hyacinth Boat Control{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-3">Dashboard</h1>
+                <p>
+                    Welcome, {{ current_user.username }}. Authentication is active and this page is protected.
+                </p>
+
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-8">
+                        <div class="d-flex align-items-center justify-content-between mb-3 gap-3">
+                            <h2 class="h5 mb-0">Camera Feed</h2>
+                            <span
+                                id="camera-status"
+                                class="badge {{ 'text-bg-success' if camera_status.connected else 'text-bg-danger' }}"
+                            >
+                                {{ camera_status.message }}
+                            </span>
+                        </div>
+                        <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden border">
+                            <img
+                                src="{{ url_for('main.video_feed') }}"
+                                alt="Live camera feed"
+                                class="w-100 h-100 object-fit-contain"
+                            >
+                        </div>
+                        <p class="text-muted small mt-3 mb-0">
+                            If the camera is disconnected, the stream remains available and displays an offline frame.
+                        </p>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <section class="control-panel border rounded p-3 bg-light">
+                            <h2 class="h5 mb-3 text-center">Boat Control</h2>
+                            <div class="control-grid">
+                                <button type="button" class="btn btn-success control-btn control-forward" data-command="F">
+                                    Forward
+                                </button>
+                                <button type="button" class="btn btn-primary control-btn control-left" data-command="L">
+                                    Left
+                                </button>
+                                <button type="button" class="btn btn-danger control-btn control-stop" data-command="S">
+                                    Stop
+                                </button>
+                                <button type="button" class="btn btn-primary control-btn control-right" data-command="R">
+                                    Right
+                                </button>
+                                <button type="button" class="btn btn-warning control-btn control-backward" data-command="B">
+                                    Backward
+                                </button>
+                            </div>
+                            <div id="control-status" class="alert alert-secondary small mt-3 mb-0" role="status">
+                                Ready.
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .control-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(72px, 1fr));
+        gap: 0.75rem;
+        grid-template-areas:
+            ". forward ."
+            "left stop right"
+            ". backward .";
+    }
+
+    .control-forward {
+        grid-area: forward;
+    }
+
+    .control-left {
+        grid-area: left;
+    }
+
+    .control-stop {
+        grid-area: stop;
+    }
+
+    .control-right {
+        grid-area: right;
+    }
+
+    .control-backward {
+        grid-area: backward;
+    }
+
+    .control-btn {
+        min-height: 64px;
+        font-weight: 700;
+        touch-action: none;
+        user-select: none;
+    }
+
+    .control-btn:active,
+    .control-btn.is-pressed {
+        transform: scale(0.97);
+    }
+
+    @media (max-width: 575.98px) {
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .control-panel {
+            margin-inline: -0.25rem;
+        }
+
+        .control-grid {
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            min-height: 58px;
+            padding-inline: 0.5rem;
+        }
+    }
+</style>
+
+<script>
+    async function refreshCameraStatus() {
+        const statusBadge = document.getElementById("camera-status");
+
+        try {
+            const response = await fetch("{{ url_for('main.camera_status') }}");
+            const status = await response.json();
+            statusBadge.textContent = status.message;
+            statusBadge.className = status.connected ? "badge text-bg-success" : "badge text-bg-danger";
+        } catch (error) {
+            statusBadge.textContent = "Camera status unavailable.";
+            statusBadge.className = "badge text-bg-warning";
+        }
+    }
+
+    refreshCameraStatus();
+    setInterval(refreshCameraStatus, 3000);
+
+    const controlStatus = document.getElementById("control-status");
+    const controlButtons = document.querySelectorAll(".control-btn");
+    const activePointers = new Map();
+
+    async function sendControlCommand(command) {
+        try {
+            const response = await fetch("{{ url_for('main.control') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ command }),
+            });
+            const result = await response.json();
+
+            controlStatus.textContent = result.message;
+            controlStatus.className = response.ok
+                ? "alert alert-success small mt-3 mb-0"
+                : "alert alert-warning small mt-3 mb-0";
+        } catch (error) {
+            controlStatus.textContent = "Control command could not be sent.";
+            controlStatus.className = "alert alert-danger small mt-3 mb-0";
+        }
+    }
+
+    function pressControlButton(event) {
+        const button = event.currentTarget;
+        const command = button.dataset.command;
+
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        button.classList.add("is-pressed");
+        activePointers.set(event.pointerId, button);
+        sendControlCommand(command);
+    }
+
+    function releaseControlButton(event) {
+        const button = activePointers.get(event.pointerId);
+
+        if (!button) {
+            return;
+        }
+
+        event.preventDefault();
+        button.classList.remove("is-pressed");
+        activePointers.delete(event.pointerId);
+        sendControlCommand("S");
+    }
+
+    controlButtons.forEach((button) => {
+        button.addEventListener("pointerdown", pressControlButton);
+        button.addEventListener("pointerup", releaseControlButton);
+        button.addEventListener("pointercancel", releaseControlButton);
+        button.addEventListener("lostpointercapture", releaseControlButton);
+    });
+</script>
+{% endblock %}
