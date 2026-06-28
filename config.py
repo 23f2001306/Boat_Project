@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -12,3 +13,4 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CAMERA_INDEX = 0
     ARDUINO_BAUD_RATE = 9600
+    BOAT_API_TOKEN = os.environ.get("BOAT_API_TOKEN", "").strip()

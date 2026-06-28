@@ -119,7 +119,39 @@ sudo systemctl enable boat-control
 
 The app will now start automatically when the Raspberry Pi boots.
 
-## 10. Useful Service Commands
+## 10. Optional Remote Command API
+
+Browser control works after logging in from any device on the same network:
+
+```text
+http://RASPBERRY_PI_IP:5000
+```
+
+For direct command forwarding from scripts, microcontrollers, or other apps, set a shared API token in the systemd service:
+
+```ini
+Environment="BOAT_API_TOKEN=replace-with-a-long-random-token"
+```
+
+Then reload and restart:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart boat-control
+```
+
+Send commands to the Raspberry Pi with:
+
+```bash
+curl -X POST http://RASPBERRY_PI_IP:5000/api/remote-control \
+  -H "Content-Type: application/json" \
+  -H "X-Boat-Api-Key: replace-with-a-long-random-token" \
+  -d '{"command":"F"}'
+```
+
+Valid commands are `F`, `B`, `L`, `R`, and `S`.
+
+## 11. Useful Service Commands
 
 Restart:
 

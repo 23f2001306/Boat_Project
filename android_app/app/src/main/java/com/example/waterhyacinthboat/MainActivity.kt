@@ -86,7 +86,9 @@ class MainActivity : Activity() {
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
 
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
     private fun showWebView() {
@@ -110,10 +112,10 @@ class MainActivity : Activity() {
         webView.visibility = View.GONE
         errorPanel.visibility = View.VISIBLE
         errorTitle.text = getString(R.string.server_offline_title)
-        errorMessage.text = getString(R.string.server_offline_message)
+        errorMessage.text = getString(R.string.server_offline_message, BOAT_SERVER_URL)
     }
 
     companion object {
-        private const val BOAT_SERVER_URL = "http://RASPBERRY_PI_IP"
+        private val BOAT_SERVER_URL = BuildConfig.BOAT_SERVER_URL.trimEnd('/')
     }
 }

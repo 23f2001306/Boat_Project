@@ -28,6 +28,7 @@ Phase 8 adds Raspberry Pi deployment files for Gunicorn and systemd.
 - Press-and-hold movement controls
 - Stop command sent automatically on button release
 - Control endpoint at `POST /api/control`
+- Token-protected remote command endpoint at `POST /api/remote-control`
 - Gunicorn deployment entry point
 - systemd service for automatic startup on Raspberry Pi boot
 
@@ -94,6 +95,8 @@ python run.py
 ```text
 http://127.0.0.1:5000
 ```
+
+The development server listens on `0.0.0.0:5000`, so another device on the same network can open `http://YOUR_COMPUTER_IP:5000`.
 
 ## Raspberry Pi Deployment
 
@@ -170,6 +173,15 @@ You can also check the control endpoint protection:
 ```
 
 That should also return `302` when logged out.
+
+To test the remote command endpoint without a login session:
+
+```powershell
+$env:BOAT_API_TOKEN="dev-token"
+.\venv\Scripts\python.exe -c "from app import create_app; app=create_app(); c=app.test_client(); print(c.post('/api/remote-control', json={'command':'X'}, headers={'X-Boat-Api-Key':'dev-token'}).status_code)"
+```
+
+That should return `400` for the invalid command, proving the API token was accepted and command validation ran.
 
 ## Phase Boundary
 

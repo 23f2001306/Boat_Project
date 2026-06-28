@@ -8,6 +8,8 @@ User=pi
 Group=pi
 WorkingDirectory=/home/pi/Boat_Project
 Environment="PATH=/home/pi/Boat_Project/venv/bin"
+# Uncomment and set this to enable POST /api/remote-control for non-browser clients.
+# Environment="BOAT_API_TOKEN=replace-with-a-long-random-token"
 ExecStart=/home/pi/Boat_Project/venv/bin/gunicorn --config /home/pi/Boat_Project/deployment/gunicorn.conf.py wsgi:app
 Restart=always
 RestartSec=5

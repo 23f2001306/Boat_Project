@@ -1,3 +1,5 @@
+from functools import wraps
+
 from flask import Blueprint, Response, current_app, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 
@@ -48,6 +50,37 @@ def test_command():
 @main_bp.route("/api/control", methods=["POST"])
 @login_required
 def control():
+    return send_arduino_command()
+
+
+def remote_control_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        expected_token = current_app.config.get("BOAT_API_TOKEN", "")
+
+        if not expected_token:
+            return jsonify({
+                "success": False,
+                "sent": False,
+                "message": "Remote control API is disabled. Set BOAT_API_TOKEN on the Raspberry Pi.",
+            }), 403
+
+        supplied_token = request.headers.get("X-Boat-Api-Key", "")
+        if supplied_token != expected_token:
+            return jsonify({
+                "success": False,
+                "sent": False,
+                "message": "Invalid or missing boat API token.",
+            }), 401
+
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
+@main_bp.route("/api/remote-control", methods=["POST"])
+@remote_control_required
+def remote_control():
     return send_arduino_command()
 
 
